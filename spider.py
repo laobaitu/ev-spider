@@ -9,8 +9,18 @@ import codecs
 import threading
 
 class CarInfo:
-    subBrand = ''
     name = ''
+    url = ''
+    score = ''
+    image = ''
+    level = ''
+    dist = ''
+    motor = ''
+    charge_time = ''
+    official_price = ''
+    discounted_price = ''
+    colors = []
+
 
 class BrandInfo:
     name = ''
@@ -29,8 +39,8 @@ def getBrandList(content):
     if content != None:
         brands = []
         soup = BeautifulSoup(content, 'lxml')
-        carTree = soup.find_all('div', class_='cartree')[0].find_all('li')
-        for line in carTree:
+        brandTree = soup.find('div', class_='cartree').find_all('li')
+        for line in brandTree:
             brand = BrandInfo()
             brand.name = line.get_text().strip().split('(')[0]
             brand.url = r'https://car.autohome.com.cn' + line.find('a')['href']
@@ -44,40 +54,61 @@ def getCars(brandContent):
     cars = []
     if brandContent != None:
         soup = BeautifulSoup(brandContent, 'lxml')
+        carTree = soup.find_all('div', class_='tab-content fn-visible')[0]
+        for line in carTree.find_all('div', class_='list-cont-bg'):
+            car = CarInfo()
+            car.name = line.find('div', class_='main-title').find('a').get_text().strip()
+            car.url = r'https://car.autohome.com.cn' + line.find('div', class_='main-title').find('a')['href']
+            car.score = line.find('div', class_='score-cont').get_text().split('：')[1].strip()
+            car.image = r'https:' + line.find('div', class_='list-cont-img').find('img')['src']
+            lis = line.find('ul', class_='lever-ul').find_all('li')
+            car.level = lis[0].find('span').get_text().strip()
+            car.dist = lis[1].find('span').get_text().strip()
+            car.motor = lis[2].find('span').get_text().strip()
+            car.charge_time = lis[3].find('span').get_text().strip()
+            for colorInfo in lis[4].find_all('a'):
+                car.colors = car.colors + [colorInfo.find_all('em')[0]['style'][-8:-1]]
+            car.official_price = line.find('div', class_='main-lever-right').find('span').get_text().strip()
+            cars.append(car)
         return cars
     else:
         return None
     pass
 
-def saveFile(data):
-    pass
+def saveFile(brands):
+    with open('output.md', 'w', encoding='utf-8') as f:
+        f.write('| 品牌 | 型号 | 图片 | 用户评分 | 级别 | 续航里程 | 发动机 | 充电时间 | 颜色 | 官方指导价 |\n')
+        f.write('| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |\n')
+        for brand in brands:
+            for car in brand.cars:
+                f.write('| <u>[' + brand.name + '](' + brand.url + ')</u> ')
+                f.write('| <u>[' + car.name + '](' + car.url + ')</u> ')
+                f.write('| ![](' + car.image + ') ')
+                f.write('| ' + car.score + ' ')
+                f.write('| ' + car.level + ' ')
+                f.write('| ' + car.dist + ' ')
+                f.write('| ' + car.motor + ' ')
+                f.write('| ' + car.charge_time + ' ')
+                f.write('| ' + 'car.colors' + ' ')
+                f.write('| ' + car.official_price + ' ')
+                f.write('|\n')
+        pass
+    
 
 def log(msg):
-    print('[LOG] ' + ', ' + time.strftime('%H:%M:%S',time.localtime(time.time())) + ' Thread: ' + threading.current_thread().name + ', ' + msg)
-
-'''
-def UrlsThreads():
-    threadPool = []
-
-    for keyword in keywords:
-        threadPool.append(threading.Thread(target=getUrlByKeyword, name='menu ' + keyword ,args=(keyword,)))
-
-    for thread in threadPool:
-        thread.start()
-
-    while len(threadPool) > 0:
-        for thread in threadPool:
-            if thread.is_alive() == False:
-                threadPool.remove(thread)
-    return
-'''
+    print('[LOG] ' + ', ' + time.strftime('%H:%M:%S',time.localtime(time.time())) + ': ' + str(msg))
 
 if __name__ == "__main__":
     url = 'https://car.autohome.com.cn/diandongche/index.html'
     content = getUrlContent(url)
     brands = getBrandList(content)
+    log('====== Total brand number :' + str(len(brands)) + ' ======')
     for brand in brands:
-        brandContent = getUrlContent(brand.url)
-        for car in getCars(brandContent):
-            brand.cars.append(car)
+        time.sleep(0.96)
+        log('++++++ Parsing brand :' + brand.name + ' ++++++')    
+        brand.cars = list(getCars(getUrlContent(brand.url)))
+        log('++++++ ' + brand.name + ' contains ' + str(len(brand.cars)) + ' cars ++++++')    
+
+    saveFile(brands)
+
     pass
