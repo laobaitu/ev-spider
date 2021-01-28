@@ -67,7 +67,7 @@ def getCars(brandContent):
             car.motor = lis[2].find('span').get_text().strip()
             car.charge_time = lis[3].find('span').get_text().strip()
             for colorInfo in lis[4].find_all('a'):
-                car.colors = car.colors + [colorInfo.find_all('em')[0]['style'][-8:-1]]
+                car.colors = car.colors + [colorInfo.find('div', class_='tip-content').get_text().strip()]
             car.official_price = line.find('div', class_='main-lever-right').find('span').get_text().strip()
             cars.append(car)
         return cars
@@ -89,7 +89,9 @@ def saveFile(brands):
                 f.write('| ' + car.dist + ' ')
                 f.write('| ' + car.motor + ' ')
                 f.write('| ' + car.charge_time + ' ')
-                f.write('| ' + 'car.colors' + ' ')
+                f.write('| ')
+                for color in car.colors:
+                    f.write(color + ' ')
                 f.write('| ' + car.official_price + ' ')
                 f.write('|\n')
         pass
@@ -103,9 +105,11 @@ if __name__ == "__main__":
     content = getUrlContent(url)
     brands = getBrandList(content)
     log('====== Total brand number :' + str(len(brands)) + ' ======')
+    index = 1
     for brand in brands:
-        time.sleep(0.96)
-        log('++++++ Parsing brand :' + brand.name + ' ++++++')    
+        time.sleep(0.56)
+        log('++++++ Parsing ' + str(index) + '/' + str(len(brands)) + ': ' + brand.name + ' ++++++')    
+        index = index + 1
         brand.cars = list(getCars(getUrlContent(brand.url)))
         log('++++++ ' + brand.name + ' contains ' + str(len(brand.cars)) + ' cars ++++++')    
 
