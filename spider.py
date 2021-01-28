@@ -3,10 +3,7 @@
 import bs4
 from bs4 import BeautifulSoup
 import requests
-import string
 import time
-import codecs
-import threading
 
 class CarInfo:
     name = ''
