@@ -27,29 +27,35 @@ def getUrlContent(url):
 
 def getBrandList(content):
     if content != None:
-        brandList = []
+        brands = []
         soup = BeautifulSoup(content, 'lxml')
         carTree = soup.find_all('div', class_='cartree')[0].find_all('li')
         for line in carTree:
-            brandInfo = BrandInfo()
-            brandInfo.name = line.get_text().strip().split('(')[0]
-            brandInfo.url = r'https://car.autohome.com.cn' + line.find('a')['href']
-            brandList.append(brandInfo)
-        return brandList
+            brand = BrandInfo()
+            brand.name = line.get_text().strip().split('(')[0]
+            brand.url = r'https://car.autohome.com.cn' + line.find('a')['href']
+            brands.append(brand)
+        return brands
     else:
         return None
     pass
 
 def getCars(brandContent):
+    cars = []
     if brandContent != None:
-        pass
+        soup = BeautifulSoup(brandContent, 'lxml')
+        return cars
     else:
         return None
+    pass
+
+def saveFile(data):
     pass
 
 def log(msg):
     print('[LOG] ' + ', ' + time.strftime('%H:%M:%S',time.localtime(time.time())) + ' Thread: ' + threading.current_thread().name + ', ' + msg)
 
+'''
 def UrlsThreads():
     threadPool = []
 
@@ -64,12 +70,14 @@ def UrlsThreads():
             if thread.is_alive() == False:
                 threadPool.remove(thread)
     return
-
+'''
 
 if __name__ == "__main__":
     url = 'https://car.autohome.com.cn/diandongche/index.html'
     content = getUrlContent(url)
-    bList = getBrandList(content)
-    for b in bList:
-        print(b.name, b.url)
+    brands = getBrandList(content)
+    for brand in brands:
+        brandContent = getUrlContent(brand.url)
+        for car in getCars(brandContent):
+            brand.cars.append(car)
     pass
