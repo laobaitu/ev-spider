@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import bs4
 from bs4 import BeautifulSoup
 import requests
